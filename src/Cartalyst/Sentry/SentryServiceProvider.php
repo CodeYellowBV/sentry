@@ -25,6 +25,7 @@ use Cartalyst\Sentry\Hashing\NativeHasher;
 use Cartalyst\Sentry\Hashing\Sha256Hasher;
 use Cartalyst\Sentry\Hashing\WhirlpoolHasher;
 use Cartalyst\Sentry\Sentry;
+use Cartalyst\Sentry\SessionHandlers\NativeSessionHandler;
 use Cartalyst\Sentry\Sessions\IlluminateSession;
 use Cartalyst\Sentry\Throttling\Eloquent\Provider as ThrottleProvider;
 use Cartalyst\Sentry\Users\Eloquent\Provider as UserProvider;
@@ -289,8 +290,10 @@ class SentryServiceProvider extends ServiceProvider {
 				$app['sentry.user'],
 				$app['sentry.group'],
 				$app['sentry.throttle'],
-				$app['sentry.session'],
-				$app['sentry.cookie'],
+				new NativeSessionHandler(
+					$app['sentry.session'],
+					$app['sentry.cookie']
+				),
 				$app['request']->getClientIp()
 			);
 		});

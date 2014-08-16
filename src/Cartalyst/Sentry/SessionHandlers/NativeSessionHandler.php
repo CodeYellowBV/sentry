@@ -66,8 +66,7 @@ class NativeSessionHandler implements SessionHandlerInterface
 	public function get($key)
 	{
 		$values = $this->session->get();
-		!isset($values[$key]) && $values = $this->cookie->get();
-
+		!isset($values[$key]) && $values = (array)$this->cookie->get();
 		return isset($values[$key]) ? $values[$key] : null;		
 	}
 

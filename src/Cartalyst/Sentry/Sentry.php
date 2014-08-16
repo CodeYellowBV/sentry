@@ -736,7 +736,8 @@ class Sentry {
 
 		$this->session->set(static::SESSION_KEY_USER_ID, $oldUser[static::SESSION_KEY_USER_ID]);
 		$this->session->set(static::SESSION_KEY_PERSIST_CODE, $oldUser[static::SESSION_KEY_PERSIST_CODE]);
-		$this->user = $this->userProvider->findUserById($oldUser[static::SESSION_KEY_USER_ID]);
+		$this->session->set(static::SESSION_MASQUERADE_STACK, $stack);
+		$this->user = $this->userProvider->findById($oldUser[static::SESSION_KEY_USER_ID]);
 	}
 
 	/**

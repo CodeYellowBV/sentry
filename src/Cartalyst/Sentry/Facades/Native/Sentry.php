@@ -66,7 +66,7 @@ class Sentry extends Facade {
 			$throttleProvider ?: new ThrottleProvider($userProvider),
 			new NativeSessionHandler(
 				$session          ?: new NativeSession,
-				$cookie           ?: new NativeCookie,
+				$cookie           ?: new NativeCookie
 			),
 			$ipAddress        ?: static::guessIpAddress()
 		);
