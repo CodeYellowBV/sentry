@@ -34,8 +34,11 @@ use Cartalyst\Sentry\Users\ProviderInterface as UserProviderInterface;
 use Cartalyst\Sentry\Users\UserInterface;
 use Cartalyst\Sentry\Users\UserNotFoundException;
 use Cartalyst\Sentry\Users\UserNotActivatedException;
+use Cartalyst\Sentry\Sessions\Session;
 
 class Sentry {
+	const SESSION_KEY_PERSIST_CODE = 'persistCode';
+	const SESSION_KEY_USER_ID = 'userId';
 
 	/**
 	 * The user that's been retrieved and is used
@@ -47,19 +50,6 @@ class Sentry {
 	 */
 	protected $user;
 
-	/**
-	 * The session driver used by Sentry.
-	 *
-	 * @var \Cartalyst\Sentry\Sessions\SessionInterface
-	 */
-	protected $session;
-
-	/**
-	 * The cookie driver used by Sentry.
-	 *
-	 * @var \Cartalyst\Sentry\Cookies\CookieInterface
-	 */
-	protected $cookie;
 
 	/**
 	 * The user provider, used for retrieving
@@ -95,6 +85,14 @@ class Sentry {
 	 */
 	protected $ipAddress = '0.0.0.0';
 
+
+	/**
+	 * The session class
+	 *
+	 * @var \Cartalyst\Sentry\Groups\Sessions\Sentry
+	 */
+	protected $session;
+
 	/**
 	 * Create a new Sentry object.
 	 *
@@ -119,8 +117,7 @@ class Sentry {
 		$this->groupProvider    = $groupProvider ?: new GroupProvider;
 		$this->throttleProvider = $throttleProvider ?: new ThrottleProvider($this->userProvider);
 
-		$this->session          = $session ?: new NativeSession;
-		$this->cookie           = $cookie ?: new NativeCookie;
+		$this->session = new Session($session, $cookie);
 
 		if (isset($ipAddress))
 		{
@@ -245,20 +242,15 @@ class Sentry {
 	{
 		if (is_null($this->user))
 		{
-			// Check session first, follow by cookie
-			if ( ! $userArray = $this->session->get() and ! $userArray = $this->cookie->get())
+			$id = $this->session->get(self::SESSION_KEY_USER_ID);
+			$persistCode = $this->session->get(self::SESSION_KEY_PERSIST_CODE);
+
+
+			// If either user id or persist code is not set we are not logged in
+			if ($id == null || $persistCode == null)
 			{
 				return false;
 			}
-
-			// Now check our user is an array with two elements,
-			// the username followed by the persist code
-			if ( ! is_array($userArray) or count($userArray) !== 2)
-			{
-				return false;
-			}
-
-			list($id, $persistCode) = $userArray;
 
 			// Let's find our user
 			try
@@ -321,18 +313,15 @@ class Sentry {
 			throw new UserNotActivatedException("Cannot login user [$login] as they are not activated.");
 		}
 
+
+
 		$this->user = $user;
 
-		// Create an array of data to persist to the session and / or cookie
-		$toPersist = array($user->getId(), $user->getPersistCode());
-
 		// Set sessions
-		$this->session->put($toPersist);
+		$this->session->set(self::SESSION_KEY_USER_ID, $user->getId());
+		$this->session->set(self::SESSION_KEY_PERSIST_CODE, $user->getPersistCode());
 
-		if ($remember)
-		{
-			$this->cookie->forever($toPersist);
-		}
+		$remember && $this->session->forever();
 
 		// The user model can attach any handlers
 		// to the "recordLogin" event.
@@ -358,8 +347,7 @@ class Sentry {
 	{
 		$this->user = null;
 
-		$this->session->forget();
-		$this->cookie->forget();
+		$this->session->destroy();
 	}
 
 	/**
@@ -397,7 +385,7 @@ class Sentry {
 	 */
 	public function setSession(SessionInterface $session)
 	{
-		$this->session = $session;
+		$this->session->setSession($session);
 	}
 
 	/**
@@ -407,7 +395,7 @@ class Sentry {
 	 */
 	public function getSession()
 	{
-		return $this->session;
+		return $this->session->getSession();
 	}
 
 	/**

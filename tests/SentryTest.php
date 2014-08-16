@@ -87,7 +87,11 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 		$user->shouldReceive('getPersistCode')->once()->andReturn('persist_code');
 		$user->shouldReceive('recordLogin')->once();
 
-		$this->session->shouldReceive('put')->with(array('foo', 'persist_code'))->once();
+		$session = m::mock('Cartalyst\Sentry\Sessions\Session');
+
+		$session->shouldReceive('set')->with(Sentry::SESSION_KEY_USER_ID, 'foo')->once();
+		$session->shouldReceive('set')->with(Sentry::SESSION_KEY_PERSIST_CODE, 'persist_code')->once();
+
 
 		$this->sentry->login($user);
 	}
