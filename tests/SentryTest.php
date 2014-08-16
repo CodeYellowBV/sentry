@@ -455,106 +455,233 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 		$sentry->getUser();
 	}
 
-    public function testFindGroupById()
-    {
-        $this->groupProvider->shouldReceive('findById')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findGroupByID(1));
-    }
+	public function testFindGroupById()
+	{
+		$this->groupProvider->shouldReceive('findById')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findGroupByID(1));
+	}
 
-    public function testFindGroupByName()
-    {
-        $this->groupProvider->shouldReceive('findByName')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findGroupByName("name"));
-    }
+	public function testFindGroupByName()
+	{
+		$this->groupProvider->shouldReceive('findByName')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findGroupByName("name"));
+	}
 
-    public function testFindAllGroups()
-    {
-        $this->groupProvider->shouldReceive('findAll')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findAllGroups());
-    }
+	public function testFindAllGroups()
+	{
+		$this->groupProvider->shouldReceive('findAll')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findAllGroups());
+	}
 
-    public function testCreateGroup()
-    {
-        $this->groupProvider->shouldReceive('create')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->createGroup(array()));
-    }
+	public function testCreateGroup()
+	{
+		$this->groupProvider->shouldReceive('create')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->createGroup(array()));
+	}
 
-    public function testFindUserByID()
-    {
-        $this->userProvider->shouldReceive('findById')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findUserById(1));
-    }
-    public function testFindUserByLogin()
-    {
-        $this->userProvider->shouldReceive('findByLogin')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findUserByLogin("login"));
-    }
+	public function testFindUserByID()
+	{
+		$this->userProvider->shouldReceive('findById')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findUserById(1));
+	}
+	public function testFindUserByLogin()
+	{
+		$this->userProvider->shouldReceive('findByLogin')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findUserByLogin("login"));
+	}
 
-    public function testFindUserByCredentials()
-    {
-        $this->userProvider->shouldReceive('findByCredentials')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findUserByCredentials(array()));
-    }
+	public function testFindUserByCredentials()
+	{
+		$this->userProvider->shouldReceive('findByCredentials')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findUserByCredentials(array()));
+	}
 
-    public function testFindUserByActivationCode()
-    {
-        $this->userProvider->shouldReceive('findByActivationCode')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findUserByActivationCode("x"));
-    }
+	public function testFindUserByActivationCode()
+	{
+		$this->userProvider->shouldReceive('findByActivationCode')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findUserByActivationCode("x"));
+	}
 
-    public function testFindUserByResetPasswordCode()
-    {
-        $this->userProvider->shouldReceive('findByResetPasswordCode')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findUserByResetPasswordCode("x"));
-    }
+	public function testFindUserByResetPasswordCode()
+	{
+		$this->userProvider->shouldReceive('findByResetPasswordCode')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findUserByResetPasswordCode("x"));
+	}
 
-    public function testFindAllUsers()
-    {
-        $this->userProvider->shouldReceive('findAll')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findAllUsers());
-    }
+	public function testFindAllUsers()
+	{
+		$this->userProvider->shouldReceive('findAll')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findAllUsers());
+	}
 
-    public function testFindAllUsersInGroup()
-    {
-        $group = m::mock('Cartalyst\Sentry\Groups\GroupInterface');
-        $this->userProvider->shouldReceive('findAllInGroup')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findAllUsersInGroup($group));
-    }
+	public function testFindAllUsersInGroup()
+	{
+		$group = m::mock('Cartalyst\Sentry\Groups\GroupInterface');
+		$this->userProvider->shouldReceive('findAllInGroup')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findAllUsersInGroup($group));
+	}
 
-    public function testFindAllUsersWithAccess()
-    {
-        $this->userProvider->shouldReceive('findAllWithAccess')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findAllUsersWithAccess(""));
-    }
+	public function testFindAllUsersWithAccess()
+	{
+		$this->userProvider->shouldReceive('findAllWithAccess')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findAllUsersWithAccess(""));
+	}
 
-    public function testFindAllUsersWithAnyAccess()
-    {
-        $this->userProvider->shouldReceive('findAllWithAnyAccess')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findAllUsersWithAnyAccess(array()));
-    }
+	public function testFindAllUsersWithAnyAccess()
+	{
+		$this->userProvider->shouldReceive('findAllWithAnyAccess')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findAllUsersWithAnyAccess(array()));
+	}
 
-    public function testCreateUser()
-    {
-        $this->userProvider->shouldReceive('create')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->createUser(array()));
-    }
+	public function testCreateUser()
+	{
+		$this->userProvider->shouldReceive('create')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->createUser(array()));
+	}
 
-    public function testGetEmptyUser()
-    {
-        $this->userProvider->shouldReceive('getEmptyUser')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->getEmptyUser());
-    }
+	public function testGetEmptyUser()
+	{
+		$this->userProvider->shouldReceive('getEmptyUser')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->getEmptyUser());
+	}
 
-    public function testFindThrottlerByUserID()
-    {
-        $this->throttleProvider->shouldReceive('findByUserId')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findThrottlerByUserId(1));
-    }
+	public function testFindThrottlerByUserID()
+	{
+		$this->throttleProvider->shouldReceive('findByUserId')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findThrottlerByUserId(1));
+	}
 
-    public function testFindThrottlerByUserLogin()
-    {
-        $this->throttleProvider->shouldReceive('findByUserLogin')->once()->andReturn(true);
-        $this->assertTrue($this->sentry->findThrottlerByUserLogin("X"));
-    }
+	public function testFindThrottlerByUserLogin()
+	{
+		$this->throttleProvider->shouldReceive('findByUserLogin')->once()->andReturn(true);
+		$this->assertTrue($this->sentry->findThrottlerByUserLogin("X"));
+	}
 
+	/**
+	 * Simple masquerade check
+	 */
+	public function testSimpleMasquerade()
+	{
+		$user = m::mock('Cartalyst\Sentry\Users\UserInterface');
+
+		$this->userProvider->shouldReceive('findById')->once()->andReturn($userOld = m::mock('Cartalyst\Sentry\Users\UserInterface'));
+		
+
+		$userOld->shouldReceive('checkPersistCode')->andReturn(true);
+		$userOld->shouldReceive('isActivated')->andReturn(true);
+		$userOld->shouldReceive('isEnabled')->andReturn(true);
+		$userOld->shouldReceive('isBanned')->andReturn(false);
+		$userOld->shouldReceive('isSuspended')->andReturn(false);
+
+		$this->throttleProvider->shouldReceive('findByUser')->andReturn($user);
+		$this->throttleProvider->shouldReceive('isEnabled')->andReturn(true);
+
+		$user->shouldReceive('isActivated')->andReturn(true);
+		$user->shouldReceive('isEnabled')->andReturn(true);
+		$user->shouldReceive('isBanned')->andReturn(false);
+		$user->shouldReceive('isSuspended')->andReturn(false);
+		$user->shouldReceive('getId')->andReturn('test');
+		$user->shouldReceive('getPersistCode')->andReturn('persist_code');
+		$user->shouldReceive('recordLogin');
+
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_PERSIST_CODE)->andReturn('foo');
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_USER_ID)->andReturn('bar');
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_MASQUERADE_STACK)->andReturn(null);
+		$this->sessionHandler->shouldReceive('set')
+			->with(Sentry::SESSION_MASQUERADE_STACK, array(
+				array(Sentry::SESSION_KEY_PERSIST_CODE => 'foo', Sentry::SESSION_KEY_USER_ID => 'bar')   
+			));;
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_USER_ID, 'test');
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_PERSIST_CODE, 'persist_code');
+
+		$this->sentry->masquerade($user);
+	}
+
+	/**
+	 * @expectedException Cartalyst\Sentry\Users\LoginRequiredException
+	 */
+	public function testMasqueradeNogLoggedInException() {
+		$user = m::mock('Cartalyst\Sentry\Users\UserInterface');
+
+		$this->sessionHandler->shouldReceive('get')->andReturn(null);
+
+		$this->sentry->masquerade($user);
+	}
+
+	/**
+	 * tests If current masquerades are not lost if you masquerade
+	 */
+	public function testMasqueradeStackNotLost()
+	{
+		$user = m::mock('Cartalyst\Sentry\Users\UserInterface');
+
+		$this->userProvider->shouldReceive('findById')->once()->andReturn($userOld = m::mock('Cartalyst\Sentry\Users\UserInterface'));
+		
+
+		$userOld->shouldReceive('checkPersistCode')->andReturn(true);
+		$userOld->shouldReceive('isActivated')->andReturn(true);
+		$userOld->shouldReceive('isEnabled')->andReturn(true);
+		$userOld->shouldReceive('isBanned')->andReturn(false);
+		$userOld->shouldReceive('isSuspended')->andReturn(false);
+
+		$this->throttleProvider->shouldReceive('findByUser')->andReturn($user);
+		$this->throttleProvider->shouldReceive('isEnabled')->andReturn(true);
+
+		$user->shouldReceive('isActivated')->andReturn(true);
+		$user->shouldReceive('isEnabled')->andReturn(true);
+		$user->shouldReceive('isBanned')->andReturn(false);
+		$user->shouldReceive('isSuspended')->andReturn(false);
+		$user->shouldReceive('getId')->andReturn('test');
+		$user->shouldReceive('getPersistCode')->andReturn('persist_code');
+		$user->shouldReceive('recordLogin');
+
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_PERSIST_CODE)->andReturn('foo');
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_USER_ID)->andReturn('bar');
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_MASQUERADE_STACK)->andReturn(array(
+				array(Sentry::SESSION_KEY_PERSIST_CODE => 'foo_old', Sentry::SESSION_KEY_USER_ID => 'bar_old')   
+			));
+		$this->sessionHandler->shouldReceive('set')
+			->with(Sentry::SESSION_MASQUERADE_STACK, array(
+				array(Sentry::SESSION_KEY_PERSIST_CODE => 'foo_old', Sentry::SESSION_KEY_USER_ID => 'bar_old'),
+				array(Sentry::SESSION_KEY_PERSIST_CODE => 'foo', Sentry::SESSION_KEY_USER_ID => 'bar')
+			));;
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_USER_ID, 'test');
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_PERSIST_CODE, 'persist_code');
+
+		$this->sentry->masquerade($user);
+	}
+
+	/**
+	 * Test if a normal masqueradedLogout works if the person is nog masqueraded
+	 */
+	public function testCheckMasqueradedLoggingOut()
+	{
+		$this->sentry->setUser(m::mock('Cartalyst\Sentry\Users\UserInterface'));
+		$this->sessionHandler->shouldReceive('destroy')->once();
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_MASQUERADE_STACK)->once()->andReturn(null);
+		$this->sentry->masqueradedLogout();
+
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_USER_ID)->once()->andReturn(null);
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_PERSIST_CODE)->once()->andReturn(null);
+		$this->assertNull($this->sentry->getUser());
+	}
+
+	/**
+	 * Test if a masqueraded logout goes back to the last user
+	 */
+	public function testMasqueradedLogOutGoBack()
+	{
+		$this->sentry->setUser(m::mock('Cartalyst\Sentry\Users\UserInterface'));
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_MASQUERADE_STACK)->once()->andReturn(array(
+				array(Sentry::SESSION_KEY_PERSIST_CODE => 'foo_old', Sentry::SESSION_KEY_USER_ID => 'bar_old'),
+				array(Sentry::SESSION_KEY_PERSIST_CODE => 'foo', Sentry::SESSION_KEY_USER_ID => 'bar')
+			));
+
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_USER_ID, 'bar')->once();
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_PERSIST_CODE, 'foo')->once();
+
+		$this->userProvider->shouldReceive('findUserById')->with('bar')->andReturn('test');
+		$this->sentry->masqueradedLogout();
+		$this->assertEquals('test', $this->sentry->getUser());
+	}
 }

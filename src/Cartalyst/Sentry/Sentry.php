@@ -40,6 +40,7 @@ use Cartalyst\Sentry\Users\UserNotActivatedException;
 class Sentry {
 	const SESSION_KEY_PERSIST_CODE = 'persistCode';
 	const SESSION_KEY_USER_ID = 'userId';
+	const SESSION_MASQUERADE_STACK = 'masqueradeStack';
 
 	/**
 	 * The user that's been retrieved and is used
@@ -700,6 +701,42 @@ class Sentry {
 	public function findThrottlerByUserLogin($login, $ipAddress = null)
 	{
 		return $this->throttleProvider->findByUserLogin($login,$ipAddress);
+	}
+
+	/**
+	 * Masquerades as another user
+	 *
+	 * @param \Cartalyst\Sentry\User\UserInterface $user User to masquerade as
+	 * @return void
+	 */
+	public function masquerade(UserInterface $user)
+	{
+		if (!$this->check()) {
+			throw new LoginRequiredException();
+		} 
+
+		$old[static::SESSION_KEY_USER_ID] = $this->session->get(static::SESSION_KEY_USER_ID);
+		$old[static::SESSION_KEY_PERSIST_CODE] = $this->session->get(static::SESSION_KEY_PERSIST_CODE);
+		$stack = $this->session->get(static::SESSION_MASQUERADE_STACK) ?: array();
+		array_push($stack, $old);
+		$this->session->set(static::SESSION_MASQUERADE_STACK, $stack);
+		$this->login($user);
+	}
+
+	/**
+	 * LogOut of masquerade. Behaves like a normal logout of person is not masqueraded
+	 * 
+	 * @return void
+	 */
+	public function masqueradedLogout() {
+		$stack = $this->session->get(static::SESSION_MASQUERADE_STACK);
+		if ($stack == null || !($oldUser = array_pop($stack))) {
+			return $this->LogOut();
+		}
+
+		$this->session->set(static::SESSION_KEY_USER_ID, $oldUser[static::SESSION_KEY_USER_ID]);
+		$this->session->set(static::SESSION_KEY_PERSIST_CODE, $oldUser[static::SESSION_KEY_PERSIST_CODE]);
+		$this->user = $this->userProvider->findUserById($oldUser[static::SESSION_KEY_USER_ID]);
 	}
 
 	/**
