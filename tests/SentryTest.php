@@ -387,65 +387,28 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 		$this->assertFalse($this->sentry->check());
 	}
 
-	public function testCheckingUserChecksSessionFirst()
+
+	public function testCheckingUserReturnsFalseIfUseridIsNull()
 	{
-		$this->session->shouldReceive('get')->once()->andReturn(array('foo', 'persist_code'));
-		$this->cookie->shouldReceive('get')->never();
-
-		$throttle = m::mock('Cartalyst\Sentry\Throttling\ThrottleInterface');
-		$throttle->shouldReceive('isBanned')->once()->andReturn(false);
-		$throttle->shouldReceive('isSuspended')->once()->andReturn(false);
-
-		$this->throttleProvider->shouldReceive('findByUser')->once()->andReturn($throttle);
-		$this->throttleProvider->shouldReceive('isEnabled')->once()->andReturn(true);
-
-		$this->userProvider->shouldReceive('findById')->andReturn($user = m::mock('Cartalyst\Sentry\Users\UserInterface'));
-
-		$user->shouldReceive('checkPersistCode')->with('persist_code')->once()->andReturn(true);
-		$user->shouldReceive('isActivated')->once()->andReturn(true);
-
-		$this->assertTrue($this->sentry->check());
-	}
-
-	public function testCheckingUserChecksSessionFirstAndThenCookie()
-	{
-		$this->session->shouldReceive('get')->once();
-		$this->cookie->shouldReceive('get')->once()->andReturn(array('foo', 'persist_code'));
-
-		$throttle = m::mock('Cartalyst\Sentry\Throttling\ThrottleInterface');
-		$throttle->shouldReceive('isBanned')->once()->andReturn(false);
-		$throttle->shouldReceive('isSuspended')->once()->andReturn(false);
-
-		$this->userProvider->shouldReceive('findById')->andReturn($user = m::mock('Cartalyst\Sentry\Users\UserInterface'));
-		$this->throttleProvider->shouldReceive('findByUser')->once()->andReturn($throttle);
-		$this->throttleProvider->shouldReceive('isEnabled')->once()->andReturn(true);
-
-		$user->shouldReceive('checkPersistCode')->with('persist_code')->once()->andReturn(true);
-		$user->shouldReceive('isActivated')->once()->andReturn(true);
-
-		$this->assertTrue($this->sentry->check());
-	}
-
-	public function testCheckingUserReturnsFalseIfNoArrayIsReturned()
-	{
-		$this->session->shouldReceive('get')->once()->andReturn('we_should_never_return_a_string');
-
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_USER_ID)->once()->andReturn(null);
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_PERSIST_CODE)->once()->andReturn('persist_code');
+		
 		$this->assertFalse($this->sentry->check());
 	}
 
-	public function testCheckingUserReturnsFalseIfIncorrectArrayIsReturned()
+	public function testCheckingUserReturnsFalseIfPersistCodeIsNull()
 	{
-		$this->session->shouldReceive('get')->once()->andReturn(array('we', 'should', 'never', 'have', 'more', 'than', 'two'));
-
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_USER_ID)->once()->andReturn('user_id');
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_PERSIST_CODE)->once()->andReturn(null);
+		
 		$this->assertFalse($this->sentry->check());
 	}
 
-	public function testCheckingUserWhenNothingIsFound()
+	public function testCheckingUserReturnsFalseIfPersistCodeAndUserIdIsNull()
 	{
-		$this->session->shouldReceive('get')->once()->andReturn(null);
-
-		$this->cookie->shouldReceive('get')->once()->andReturn(null);
-
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_USER_ID)->once()->andReturn(null);
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_PERSIST_CODE)->once()->andReturn(null);
+		
 		$this->assertFalse($this->sentry->check());
 	}
 
