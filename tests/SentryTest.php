@@ -679,8 +679,10 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 
 		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_USER_ID, 'bar')->once();
 		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_PERSIST_CODE, 'foo')->once();
-
-		$this->userProvider->shouldReceive('findUserById')->with('bar')->andReturn('test');
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_MASQUERADE_STACK, array(
+			array(Sentry::SESSION_KEY_PERSIST_CODE => 'foo_old', Sentry::SESSION_KEY_USER_ID => 'bar_old')
+		))->once();
+		$this->userProvider->shouldReceive('findById')->with('bar')->andReturn('test');
 		$this->sentry->masqueradedLogout();
 		$this->assertEquals('test', $this->sentry->getUser());
 	}

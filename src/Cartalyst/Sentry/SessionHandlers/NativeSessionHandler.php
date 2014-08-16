@@ -55,6 +55,10 @@ class NativeSessionHandler implements SessionHandlerInterface
 
 	/**
 	 * Sets a value in the session
+	 *
+	 * @param string $key The key of the value to be set
+	 * @param mixed $value The value to be set
+	 * @return void
 	 */
 	public function set($key, $value)
 	{
@@ -63,6 +67,12 @@ class NativeSessionHandler implements SessionHandlerInterface
 		$this->session->put($values);
 	}
 
+	/**
+	 * Get a value in the session
+	 *
+	 * @param string $key The key of the value to get
+	 * @return void
+	 */
 	public function get($key)
 	{
 		$values = $this->session->get();
@@ -71,7 +81,9 @@ class NativeSessionHandler implements SessionHandlerInterface
 	}
 
 	/**
-	 * Destroys the session
+	 * Completely destroy the session
+	 *
+	 * @return true;
 	 */
 	public function destroy()
 	{
@@ -79,16 +91,32 @@ class NativeSessionHandler implements SessionHandlerInterface
 		$this->cookie->forget();
 	}
 
+	/**
+	 * Set the session interface for this handler
+	 *
+	 * @param Cartalyst\Sentry\Sessions\SessionInterface $session The Sessioninterface to set
+	 * @return void
+	 */
 	public function setSession(SessionInterface $session) 
 	{
 		$this->session = $session;
 	}
 
+	/**
+	 * Get the sessiondriver
+	 *
+	 * @return Cartalyst\Sentry\Sessions\SessionInterface
+	 */
 	public function getSession()
 	{
 		return $this->session;
 	}
 
+	/**
+	 * Make the session be kept forever
+	 *
+	 * @return void
+	 */
 	public function forever()
 	{
 		// Make sure that the values that are forever are not lost
