@@ -35,9 +35,7 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 
 	protected $hasher;
 
-	protected $session;
-
-	protected $cookie;
+	protected $sessionHandler;
 
 	protected $sentry;
 
@@ -52,8 +50,7 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 			$this->userProvider     = m::mock('Cartalyst\Sentry\Users\ProviderInterface'),
 			$this->groupProvider    = m::mock('Cartalyst\Sentry\Groups\ProviderInterface'),
 			$this->throttleProvider = m::mock('Cartalyst\Sentry\Throttling\ProviderInterface'),
-			$this->session          = m::mock('Cartalyst\Sentry\Sessions\SessionInterface'),
-			$this->cookie           = m::mock('Cartalyst\Sentry\Cookies\CookieInterface')
+			$this->sessionHandler   = m::mock('Cartalyst\Sentry\SessionHandlers\SessionHandlerInterface')
 		);
 	}
 
@@ -76,6 +73,7 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 		$user->shouldReceive('isActivated')->once()->andReturn(false);
 		$user->shouldReceive('getLogin')->once()->andReturn('foo');
 
+
 		$this->sentry->login($user);
 	}
 
@@ -87,10 +85,9 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 		$user->shouldReceive('getPersistCode')->once()->andReturn('persist_code');
 		$user->shouldReceive('recordLogin')->once();
 
-		$session = m::mock('Cartalyst\Sentry\Sessions\Session');
 
-		$session->shouldReceive('set')->with(Sentry::SESSION_KEY_USER_ID, 'foo')->once();
-		$session->shouldReceive('set')->with(Sentry::SESSION_KEY_PERSIST_CODE, 'persist_code')->once();
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_USER_ID, 'foo')->once();
+		$this->sessionHandler->shouldReceive('set')->with(Sentry::SESSION_KEY_PERSIST_CODE, 'persist_code')->once();
 
 
 		$this->sentry->login($user);
@@ -227,8 +224,7 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 			$this->userProvider,
 			$this->groupProvider,
 			$this->throttleProvider,
-			$this->session,
-			$this->cookie
+			$this->sessionHandler
 		);
 
 		$credentials = array(
@@ -256,8 +252,7 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 			$this->userProvider,
 			$this->groupProvider,
 			$this->throttleProvider,
-			$this->session,
-			$this->cookie
+			$this->sessionHandler
 		);
 
 		$credentials = array(
@@ -310,12 +305,11 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 	public function testCheckLoggingOut()
 	{
 		$this->sentry->setUser(m::mock('Cartalyst\Sentry\Users\UserInterface'));
-		$this->session->shouldReceive('get')->once();
-		$this->session->shouldReceive('forget')->once();
-		$this->cookie->shouldReceive('get')->once();
-		$this->cookie->shouldReceive('forget')->once();
-
+		$this->sessionHandler->shouldReceive('destroy')->once();
 		$this->sentry->logout();
+
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_USER_ID)->once()->andReturn(null);
+		$this->sessionHandler->shouldReceive('get')->with(Sentry::SESSION_KEY_PERSIST_CODE)->once()->andReturn(null);
 		$this->assertNull($this->sentry->getUser());
 	}
 
@@ -345,13 +339,13 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 		$throttle->shouldReceive('isBanned')->once()->andReturn(false);
 		$throttle->shouldReceive('isSuspended')->once()->andReturn(true);
 
-		$session->shouldReceive('forget')->once();
-		$cookie->shouldReceive('forget')->once();
-
 		$user->shouldReceive('isActivated')->once()->andReturn(true);
 
 		$this->throttleProvider->shouldReceive('findByUser')->once()->andReturn($throttle);
 		$this->throttleProvider->shouldReceive('isEnabled')->once()->andReturn(true);
+
+		$this->sessionHandler->shouldReceive('setSession')->once();
+		$this->sessionHandler->shouldReceive('destroy')->once();
 
 		$this->sentry->setSession($session);
 		$this->sentry->setCookie($cookie);
@@ -368,8 +362,8 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 
 		$throttle->shouldReceive('isBanned')->once()->andReturn(true);
 
-		$session->shouldReceive('forget')->once();
-		$cookie->shouldReceive('forget')->once();
+		$this->sessionHandler->shouldReceive('setSession')->once();
+		$this->sessionHandler->shouldReceive('destroy')->once();
 
 		$user->shouldReceive('isActivated')->once()->andReturn(true);
 
@@ -388,6 +382,8 @@ class SentryTest extends PHPUnit_Framework_TestCase {
 		$user->shouldReceive('isActivated')->once()->andReturn(false);
 
 		$this->sentry->setUser($user);
+		
+
 		$this->assertFalse($this->sentry->check());
 	}
 

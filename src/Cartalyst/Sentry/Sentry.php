@@ -25,6 +25,8 @@ use Cartalyst\Sentry\Groups\ProviderInterface as GroupProviderInterface;
 use Cartalyst\Sentry\Hashing\NativeHasher;
 use Cartalyst\Sentry\Sessions\NativeSession;
 use Cartalyst\Sentry\Sessions\SessionInterface;
+use Cartalyst\Sentry\SessionHandlers\SessionHandlerInterface;
+use Cartalyst\Sentry\SessionHandlers\NativeSessionHandler;
 use Cartalyst\Sentry\Throttling\Eloquent\Provider as ThrottleProvider;
 use Cartalyst\Sentry\Throttling\ProviderInterface as ThrottleProviderInterface;
 use Cartalyst\Sentry\Users\LoginRequiredException;
@@ -34,7 +36,6 @@ use Cartalyst\Sentry\Users\ProviderInterface as UserProviderInterface;
 use Cartalyst\Sentry\Users\UserInterface;
 use Cartalyst\Sentry\Users\UserNotFoundException;
 use Cartalyst\Sentry\Users\UserNotActivatedException;
-use Cartalyst\Sentry\Sessions\Session;
 
 class Sentry {
 	const SESSION_KEY_PERSIST_CODE = 'persistCode';
@@ -87,9 +88,9 @@ class Sentry {
 
 
 	/**
-	 * The session class
+	 * The session handler class
 	 *
-	 * @var \Cartalyst\Sentry\Groups\Sessions\Sentry
+	 * @var \Cartalyst\Sentry\SessionHandler\SessionHandlerInterface
 	 */
 	protected $session;
 
@@ -108,8 +109,7 @@ class Sentry {
 		UserProviderInterface $userProvider = null,
 		GroupProviderInterface $groupProvider = null,
 		ThrottleProviderInterface $throttleProvider = null,
-		SessionInterface $session = null,
-		CookieInterface $cookie = null,
+		SessionHandlerInterface $sessionHandler = null,
 		$ipAddress = null
 	)
 	{
@@ -117,7 +117,8 @@ class Sentry {
 		$this->groupProvider    = $groupProvider ?: new GroupProvider;
 		$this->throttleProvider = $throttleProvider ?: new ThrottleProvider($this->userProvider);
 
-		$this->session = new Session($session, $cookie);
+
+		$this->session = $sessionHandler ?: new NativeSessionHandler();
 
 		if (isset($ipAddress))
 		{
