@@ -25,7 +25,6 @@ use Cartalyst\Sentry\Sessions\SessionInterface;
 
 interface SessionHandlerInterface
 {
-
 	/**
 	 * Sets a value in the session
 	 *

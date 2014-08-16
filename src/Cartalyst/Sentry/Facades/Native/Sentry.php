@@ -27,6 +27,7 @@ use Cartalyst\Sentry\Groups\ProviderInterface as GroupProviderInterface;
 use Cartalyst\Sentry\Hashing\NativeHasher;
 use Cartalyst\Sentry\Sessions\NativeSession;
 use Cartalyst\Sentry\Sessions\SessionInterface;
+use Cartalyst\Sentry\SessionHandlers\NativeSessionHandler;
 use Cartalyst\Sentry\Sentry as BaseSentry;
 use Cartalyst\Sentry\Throttling\Eloquent\Provider as ThrottleProvider;
 use Cartalyst\Sentry\Throttling\ProviderInterface as ThrottleProviderInterface;
@@ -63,8 +64,10 @@ class Sentry extends Facade {
 			$userProvider,
 			$groupProvider    ?: new GroupProvider,
 			$throttleProvider ?: new ThrottleProvider($userProvider),
-			$session          ?: new NativeSession,
-			$cookie           ?: new NativeCookie,
+			new NativeSessionHandler(
+				$session          ?: new NativeSession,
+				$cookie           ?: new NativeCookie,
+			),
 			$ipAddress        ?: static::guessIpAddress()
 		);
 	}
