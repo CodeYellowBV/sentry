@@ -45,7 +45,7 @@ class NativeSessionHandler implements SessionHandlerInterface
 	public function get($key)
 	{
 		$values = $this->session->get();
-		!$values && $this->cookie->get();
+		!isset($values[$key]) && $values = $this->cookie->get();
 
 		return isset($values[$key]) ? $values[$key] : null;		
 	}
@@ -71,6 +71,15 @@ class NativeSessionHandler implements SessionHandlerInterface
 
 	public function forever()
 	{
-		$this->cookie->forever($this->session->get());
+		// Make sure that the values that are forever are not lost
+		$cookie = $this->cookie->get();
+		$session = $this->session->get();
+		if ($cookie == null) {
+			$cookie = $session;
+		} else if($session != null) {
+			$cookie = array_merge($cookie, $this->session->get());
+		}
+
+		$this->cookie->forever($cookie);
 	}
 }
