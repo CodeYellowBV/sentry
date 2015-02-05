@@ -23,6 +23,7 @@ use Cartalyst\Sentry\Facades\ConnectionResolver;
 use Cartalyst\Sentry\Facades\Facade;
 use Cartalyst\Sentry\Groups\Eloquent\Provider as GroupProvider;
 use Cartalyst\Sentry\Hashing\NativeHasher;
+use Cartalyst\Sentry\SessionHandlers\NativeSessionHandler;
 use Cartalyst\Sentry\Sessions\FuelPHPSession;
 use Cartalyst\Sentry\Sentry as BaseSentry;
 use Cartalyst\Sentry\Throttling\Eloquent\Provider as ThrottleProvider;
@@ -65,8 +66,10 @@ class Sentry extends Facade {
 			$userProvider = new UserProvider(new NativeHasher),
 			new GroupProvider,
 			new ThrottleProvider($userProvider),
-			new FuelPHPSession(Session::instance()),
-			new FuelPHPCookie,
+			new NativeSessionHandler(
+				new FuelPHPSession(Session::instance()),
+				new FuelPHPCookie
+			),
 			Input::real_ip()
 		);
 	}

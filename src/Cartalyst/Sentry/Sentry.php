@@ -25,6 +25,8 @@ use Cartalyst\Sentry\Groups\ProviderInterface as GroupProviderInterface;
 use Cartalyst\Sentry\Hashing\NativeHasher;
 use Cartalyst\Sentry\Sessions\NativeSession;
 use Cartalyst\Sentry\Sessions\SessionInterface;
+use Cartalyst\Sentry\SessionHandlers\SessionHandlerInterface;
+use Cartalyst\Sentry\SessionHandlers\NativeSessionHandler;
 use Cartalyst\Sentry\Throttling\Eloquent\Provider as ThrottleProvider;
 use Cartalyst\Sentry\Throttling\ProviderInterface as ThrottleProviderInterface;
 use Cartalyst\Sentry\Users\LoginRequiredException;
@@ -36,6 +38,9 @@ use Cartalyst\Sentry\Users\UserNotFoundException;
 use Cartalyst\Sentry\Users\UserNotActivatedException;
 
 class Sentry {
+	const SESSION_KEY_PERSIST_CODE = 'persistCode';
+	const SESSION_KEY_USER_ID = 'userId';
+	const SESSION_MASQUERADE_STACK = 'masqueradeStack';
 
 	/**
 	 * The user that's been retrieved and is used
@@ -47,19 +52,6 @@ class Sentry {
 	 */
 	protected $user;
 
-	/**
-	 * The session driver used by Sentry.
-	 *
-	 * @var \Cartalyst\Sentry\Sessions\SessionInterface
-	 */
-	protected $session;
-
-	/**
-	 * The cookie driver used by Sentry.
-	 *
-	 * @var \Cartalyst\Sentry\Cookies\CookieInterface
-	 */
-	protected $cookie;
 
 	/**
 	 * The user provider, used for retrieving
@@ -95,6 +87,14 @@ class Sentry {
 	 */
 	protected $ipAddress = '0.0.0.0';
 
+
+	/**
+	 * The session handler class
+	 *
+	 * @var \Cartalyst\Sentry\SessionHandler\SessionHandlerInterface
+	 */
+	protected $session;
+
 	/**
 	 * Create a new Sentry object.
 	 *
@@ -110,8 +110,7 @@ class Sentry {
 		UserProviderInterface $userProvider = null,
 		GroupProviderInterface $groupProvider = null,
 		ThrottleProviderInterface $throttleProvider = null,
-		SessionInterface $session = null,
-		CookieInterface $cookie = null,
+		SessionHandlerInterface $sessionHandler = null,
 		$ipAddress = null
 	)
 	{
@@ -119,8 +118,8 @@ class Sentry {
 		$this->groupProvider    = $groupProvider ?: new GroupProvider;
 		$this->throttleProvider = $throttleProvider ?: new ThrottleProvider($this->userProvider);
 
-		$this->session          = $session ?: new NativeSession;
-		$this->cookie           = $cookie ?: new NativeCookie;
+
+		$this->session = $sessionHandler ?: new NativeSessionHandler();
 
 		if (isset($ipAddress))
 		{
@@ -245,20 +244,15 @@ class Sentry {
 	{
 		if (is_null($this->user))
 		{
-			// Check session first, follow by cookie
-			if ( ! $userArray = $this->session->get() and ! $userArray = $this->cookie->get())
+			$id = $this->session->get(self::SESSION_KEY_USER_ID);
+			$persistCode = $this->session->get(self::SESSION_KEY_PERSIST_CODE);
+
+
+			// If either user id or persist code is not set we are not logged in
+			if ($id == null || $persistCode == null)
 			{
 				return false;
 			}
-
-			// Now check our user is an array with two elements,
-			// the username followed by the persist code
-			if ( ! is_array($userArray) or count($userArray) !== 2)
-			{
-				return false;
-			}
-
-			list($id, $persistCode) = $userArray;
 
 			// Let's find our user
 			try
@@ -321,18 +315,15 @@ class Sentry {
 			throw new UserNotActivatedException("Cannot login user [$login] as they are not activated.");
 		}
 
+
+
 		$this->user = $user;
 
-		// Create an array of data to persist to the session and / or cookie
-		$toPersist = array($user->getId(), $user->getPersistCode());
-
 		// Set sessions
-		$this->session->put($toPersist);
+		$this->session->set(self::SESSION_KEY_USER_ID, $user->getId());
+		$this->session->set(self::SESSION_KEY_PERSIST_CODE, $user->getPersistCode());
 
-		if ($remember)
-		{
-			$this->cookie->forever($toPersist);
-		}
+		$remember && $this->session->forever();
 
 		// The user model can attach any handlers
 		// to the "recordLogin" event.
@@ -358,8 +349,7 @@ class Sentry {
 	{
 		$this->user = null;
 
-		$this->session->forget();
-		$this->cookie->forget();
+		$this->session->destroy();
 	}
 
 	/**
@@ -397,7 +387,7 @@ class Sentry {
 	 */
 	public function setSession(SessionInterface $session)
 	{
-		$this->session = $session;
+		$this->session->setSession($session);
 	}
 
 	/**
@@ -407,7 +397,7 @@ class Sentry {
 	 */
 	public function getSession()
 	{
-		return $this->session;
+		return $this->session->getSession();
 	}
 
 	/**
@@ -711,6 +701,43 @@ class Sentry {
 	public function findThrottlerByUserLogin($login, $ipAddress = null)
 	{
 		return $this->throttleProvider->findByUserLogin($login,$ipAddress);
+	}
+
+	/**
+	 * Masquerades as another user
+	 *
+	 * @param \Cartalyst\Sentry\User\UserInterface $user User to masquerade as
+	 * @return void
+	 */
+	public function masquerade(UserInterface $user)
+	{
+		if (!$this->check()) {
+			throw new LoginRequiredException();
+		} 
+
+		$old[static::SESSION_KEY_USER_ID] = $this->session->get(static::SESSION_KEY_USER_ID);
+		$old[static::SESSION_KEY_PERSIST_CODE] = $this->session->get(static::SESSION_KEY_PERSIST_CODE);
+		$stack = $this->session->get(static::SESSION_MASQUERADE_STACK) ?: array();
+		array_push($stack, $old);
+		$this->session->set(static::SESSION_MASQUERADE_STACK, $stack);
+		$this->login($user);
+	}
+
+	/**
+	 * LogOut of masquerade. Behaves like a normal logout of person is not masqueraded
+	 * 
+	 * @return void
+	 */
+	public function masqueradedLogout() {
+		$stack = $this->session->get(static::SESSION_MASQUERADE_STACK);
+		if ($stack == null || !($oldUser = array_pop($stack))) {
+			return $this->LogOut();
+		}
+
+		$this->session->set(static::SESSION_KEY_USER_ID, $oldUser[static::SESSION_KEY_USER_ID]);
+		$this->session->set(static::SESSION_KEY_PERSIST_CODE, $oldUser[static::SESSION_KEY_PERSIST_CODE]);
+		$this->session->set(static::SESSION_MASQUERADE_STACK, $stack);
+		$this->user = $this->userProvider->findById($oldUser[static::SESSION_KEY_USER_ID]);
 	}
 
 	/**

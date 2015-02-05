@@ -27,6 +27,7 @@ use Cartalyst\Sentry\Sessions\CISession;
 use Cartalyst\Sentry\Sentry as BaseSentry;
 use Cartalyst\Sentry\Throttling\Eloquent\Provider as ThrottleProvider;
 use Cartalyst\Sentry\Users\Eloquent\Provider as UserProvider;
+use Cartalyst\Sentry\SessionHandlers\NativeSessionHandler;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use PDO;
 
@@ -89,8 +90,10 @@ class Sentry {
 			$userProvider = new UserProvider(new NativeHasher),
 			new GroupProvider,
 			new ThrottleProvider($userProvider),
-			new CISession($ci->session),
-			new CICookie($ci->input),
+			new NativeSessionHandler(
+				new CISession($ci->session),
+				new CICookie($ci->input)
+			),
 			$ci->input->ip_address()
 		);
 	}

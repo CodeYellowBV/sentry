@@ -23,6 +23,7 @@ use Cartalyst\Sentry\Facades\Facade;
 use Cartalyst\Sentry\Groups\Kohana\Provider as GroupProvider;
 use Cartalyst\Sentry\Sessions\KohanaSession;
 use Cartalyst\Sentry\Sentry as BaseSentry;
+use Cartalyst\Sentry\SessionHandlers\NativeSessionHandler;
 use Cartalyst\Sentry\Throttling\Kohana\Provider as ThrottleProvider;
 use Cartalyst\Sentry\Users\Kohana\Provider as UserProvider;
 
@@ -67,8 +68,10 @@ class Sentry extends Facade {
 			$userProvider = new UserProvider($hasher),
 			new GroupProvider,
 			new ThrottleProvider($userProvider),
-			new KohanaSession(\Session::instance($config['session_driver']), $config['session_key']),
-			new KohanaCookie($config['cookie_key']),
+			new NativeSessionHandler(
+				new KohanaSession(\Session::instance($config['session_driver']), $config['session_key']),
+				new KohanaCookie($config['cookie_key'])
+			),
 			\Request::$client_ip
 		);
 	}
